@@ -6,14 +6,18 @@ import random
 import openai
 import guidance
 from tqdm import tqdm
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+openai.api_key = os.getenv('OPENAI_KEY')
 OPENAI_MODEL = 'gpt-3.5-turbo'
 nlp = spacy.load("en_core_web_lg")
 random.seed(49)
 
 def generate_bs_sentences(
     input_file='data/BS.xlsx',
-    openai_key=None,
+    cleanup_sentences=False,
     output_file='data/BS_generated.xlsx',
     similar_word_replacement_number=10,
 ):
@@ -25,11 +29,10 @@ def generate_bs_sentences(
         ), tqdm(bs_sentences))
     )
 
-    if openai_key:
-        openai.api_key = openai_key
+    if cleanup_sentences:
         sentences = cleanup_sentences(sentences)
     else:
-        print('No OpenAI key provided, skipping cleanup')
+        print('Skipping sentence cleanup')
 
     save_sentences(sentences, output_file)
 
