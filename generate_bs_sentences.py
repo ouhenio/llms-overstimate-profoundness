@@ -9,14 +9,21 @@ from tqdm import tqdm
 
 OPENAI_MODEL = 'gpt-3.5-turbo'
 nlp = spacy.load("en_core_web_lg")
+random.seed(49)
 
 def generate_bs_sentences(
     input_file='data/BS.xlsx',
     openai_key=None,
     output_file='data/BS_generated.xlsx',
+    similar_word_replacement_number=10,
 ):
     bs_sentences = pd.read_excel(input_file, header=None)[0]
-    sentences = list(map(lambda sentence: create_sentence_variation(sentence), tqdm(bs_sentences)))
+    sentences = list(map(
+        lambda sentence: create_sentence_variation(
+            sentence,
+            similar_word_number=similar_word_replacement_number
+        ), tqdm(bs_sentences))
+    )
 
     if openai_key:
         openai.api_key = openai_key
@@ -32,8 +39,8 @@ def create_sentence_variation(sentence, similar_word_number=10):
 
   new_words = []
   for token in tokens:
-    if token.is_alpha and not token.is_stop and token.pos_ != "VERB":
-      new_word = most_similar_words(token.text, n=similar_word_number)[-1]
+    if token.is_alpha and not token.is_stop and token.pos_ == "NOUN" and random.random() < 0.9:
+      new_word = random.choice(most_similar_words(token.text, n=similar_word_number))
       new_words.append(new_word)
     else:
       new_words.append(token.text)
