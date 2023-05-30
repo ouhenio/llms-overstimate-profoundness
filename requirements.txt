@@ -1,0 +1,7 @@
+fire
+pandas
+openpyxl
+numpy
+spacy
+xlsxwriter
+
