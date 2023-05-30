@@ -1,0 +1,9 @@
+fire
+pandas
+openpyxl
+numpy
+spacy
+openai
+guidance
+xlsxwriter
+
