@@ -6,4 +6,5 @@ spacy
 openai
 guidance
 xlsxwriter
+python-dotenv
 
