@@ -44,20 +44,18 @@ EVALUATION_PROMPTS_DICT = {
 
 def load_sentences(path):
     df = pd.read_excel(path)
-    list_of_sentences = df.iloc[:, 0].tolist() # we asume the sentences are in te first column
+    list_of_sentences = df.iloc[:, 0].tolist() # we asume the sentences are in the first column
 
     return list_of_sentences
 
-def list_sentences_as_string(sentences):
-    return '\n'.join(['{}) {}'.format(i + 1, string) for i, string in enumerate(sentences)])
-
 def evaluate_sentences(evaluation_prompt, sentences):
-    gpt = guidance.llms.OpenAI(OPENAI_MODEL)
+    gpt = guidance.llms.OpenAI(OPENAI_MODEL, caching=False)
     evaluate_sentence = guidance('''
     {{#user~}}
     {{evaluation_prompt}}
 
-    {{sentences}}
+    {{#each sentences}}- {{this}}
+    {{/each~}}
     {{~/user}}
 
     {{#assistant~}}
@@ -77,14 +75,10 @@ if __name__ == '__main__':
     bs_sentences_all = bs_sentences + bs_sentences_generated
     random.shuffle(bs_sentences_all)
 
-    string_bs_sentences = list_sentences_as_string(bs_sentences)
-    string_bs_sentences_generated = list_sentences_as_string(bs_sentences_generated)
-    string_bs_sentences_all = list_sentences_as_string(bs_sentences_all)
-
     bs_sentences_to_evaluate = {
-        "bs_vanilla": string_bs_sentences,
-        "bs_generated": string_bs_sentences_generated,
-        "bs_all": string_bs_sentences_all
+        "bs_vanilla": bs_sentences,
+        "bs_generated": bs_sentences_generated,
+        "bs_all": bs_sentences_all
     }
 
     bs_sentences_results = {}
@@ -95,7 +89,7 @@ if __name__ == '__main__':
             evaluation_scores = evaluate_sentences(
                 evaluation_prompt=evaluation_prompt, sentences=sentences
             )
-            results[bs_type] = evaluation_scores.split("\n")
+            results[bs_type] = evaluation_scores
         bs_sentences_results[evaluation_type] = results
     
     pprint.pprint(bs_sentences_results)
