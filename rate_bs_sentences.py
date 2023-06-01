@@ -1,7 +1,8 @@
 import pandas as pd
 import openai
 import guidance
-import types
+import random
+import pprint
 from dotenv import load_dotenv
 import os
 
@@ -9,7 +10,7 @@ load_dotenv()
 openai.api_key = os.getenv('OPENAI_KEY')
 OPENAI_MODEL = 'gpt-3.5-turbo'
 
-evaluation_prompts_dict = {
+EVALUATION_PROMPTS_DICT = {
     "vanilla": """
         We are interested in how people experience the profound. Below are a series of statements taken from relevant websites. Please read each statement and take a moment to think about what it might mean. Then please rate how “profound” you think it is. Profound means “of deep meaning; of great and broadly inclusive significance.”
 
@@ -41,15 +42,13 @@ evaluation_prompts_dict = {
     """
 }
 
-EVALUATION_PROMPTS = types.SimpleNamespace(**evaluation_prompts_dict)
-
 def load_sentences(path):
     df = pd.read_excel(path)
     list_of_sentences = df.iloc[:, 0].tolist() # we asume the sentences are in te first column
 
     return list_of_sentences
 
-def list_to_string(sentences):
+def list_sentences_as_string(sentences):
     return '\n'.join(['{}) {}'.format(i + 1, string) for i, string in enumerate(sentences)])
 
 def evaluate_sentences(evaluation_prompt, sentences):
@@ -71,11 +70,33 @@ def evaluate_sentences(evaluation_prompt, sentences):
     return scores
 
 if __name__ == '__main__':
+    random.seed(49)
+
     bs_sentences = load_sentences("data/BS.xlsx")
     bs_sentences_generated = load_sentences("data/BS_generated.xlsx")
+    bs_sentences_all = bs_sentences + bs_sentences_generated
+    random.shuffle(bs_sentences_all)
 
-    string_bs_sentences_generated = list_to_string(bs_sentences_generated)
+    string_bs_sentences = list_sentences_as_string(bs_sentences)
+    string_bs_sentences_generated = list_sentences_as_string(bs_sentences_generated)
+    string_bs_sentences_all = list_sentences_as_string(bs_sentences_all)
 
-    vanilla_scores = evaluate_sentences(
-        evaluation_prompt=EVALUATION_PROMPTS.vanilla, sentences=string_bs_sentences_generated
-    )
+    bs_sentences_to_evaluate = {
+        "bs_vanilla": string_bs_sentences,
+        "bs_generated": string_bs_sentences_generated,
+        "bs_all": string_bs_sentences_all
+    }
+
+    bs_sentences_results = {}
+
+    for evaluation_type, evaluation_prompt in EVALUATION_PROMPTS_DICT.items():
+        results = {}
+        for bs_type, sentences in bs_sentences_to_evaluate.items():
+            evaluation_scores = evaluate_sentences(
+                evaluation_prompt=evaluation_prompt, sentences=sentences
+            )
+            results[bs_type] = evaluation_scores.split("\n")
+        bs_sentences_results[evaluation_type] = results
+    
+    pprint.pprint(bs_sentences_results)
+
