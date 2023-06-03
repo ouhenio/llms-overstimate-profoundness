@@ -127,15 +127,15 @@ if __name__ == '__main__':
 
     subject_counter = 0
     for trial in tqdm(range(200), desc="Trials"):
-        for evaluation_type, evaluation_prompt in tqdm(
-            EVALUATION_PROMPTS_DICT.items(), desc="Evaluations"
+        for temperature_type, temperature_value in tqdm(
+            temperatures.items(), desc="Temperatures"
         ):
-            for sentences_type, sentences in tqdm(
-                sentences_to_evaluate.items(), desc="Sentences"
-            ):
-                for temperature_type, temperature_value in tqdm(
-                    temperatures.items(), desc="Temperatures"
-                ):
+            for evaluation_type, evaluation_prompt in tqdm(
+                EVALUATION_PROMPTS_DICT.items(), desc="Evaluations"
+            ): # 10 evaluation types
+                for sentences_type, sentences in tqdm(
+                    sentences_to_evaluate.items(), desc="Sentences"
+                ): # 2 sentence types
                     evaluation_scores = evaluate_sentences_separated(
                         evaluation_prompt=evaluation_prompt, sentences=sentences
                     )
@@ -157,8 +157,6 @@ if __name__ == '__main__':
 
                     # create new df concatenating experiment results
                     df = pd.concat([df, pd.DataFrame(separated_sentences_results)], ignore_index=True)
-
-                    subject_counter += 1
 
                     evaluation_scores = evaluate_sentences_together(
                         evaluation_prompt=evaluation_prompt, sentences=sentences
@@ -187,3 +185,4 @@ if __name__ == '__main__':
 
                     # save df preemtively (in case OpenAI fails us)
                     df.to_csv('experiment_results.csv', index=False)
+            subject_counter += 1
