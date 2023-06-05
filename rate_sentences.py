@@ -18,8 +18,11 @@ TEMPERATURES = {"0": 0.1, "1": 0.7}
 NUM_SUBJECTS = 198
 
 
-def load_sentences(path: str) -> list:
-    df = pd.read_excel(path)
+def load_sentences(path: str, use_header: bool = False) -> list:
+    if use_header:
+        df = pd.read_excel(path)
+    else:
+        df = pd.read_excel(path, header=None)
     list_of_sentences = df.iloc[
         :, 0
     ].tolist()  # we asume the sentences are in the first column
@@ -117,7 +120,6 @@ def assign_experiments_values(
     sentence,
     evaluation_prompt,
     dataset,
-    block,
     subject,
 ) -> dict:
     experiment = {
@@ -128,7 +130,6 @@ def assign_experiments_values(
         "evaluation_prompt": evaluation_prompt,
         "sentence": sentence,
         "dataset": dataset,
-        "block": block,
     }
     return experiment
 
@@ -144,7 +145,7 @@ def rate_sentences(
         load_sentences("./data/New_BS.xlsx"), "1"
     )
     bs_sentences_generated = assign_dataset_to_sentences(
-        load_sentences("./data/BS_generated.xlsx"), "2"
+        load_sentences("./data/BS_generated.xlsx", use_header=True), "2"
     )
     motivational_sentences = assign_dataset_to_sentences(
         load_sentences("./data/Motivational.xlsx"), "3"
@@ -154,12 +155,9 @@ def rate_sentences(
     )
 
     bs_sentences_all = bs_sentences + bs_sentences_generated + bs_sentences_new
-    all_sentences = bs_sentences_all + mundane_sentences + motivational_sentences  # 0
-    all_sentences_shuffled = all_sentences.copy()  # 1
-    random.shuffle(all_sentences_shuffled)
+    all_sentences = bs_sentences_all + mundane_sentences + motivational_sentences
 
     NUM_SENTENCES = len(all_sentences)
-    sentences_to_evaluate = {"0": all_sentences, "1": all_sentences_shuffled}
 
     df = pd.DataFrame()
 
@@ -171,76 +169,36 @@ def rate_sentences(
             for evaluation_type, evaluation_prompt in tqdm(
                 EVALUATION_PROMPTS_DICT.items(), desc="Evaluations"
             ):  # 10 evaluation types
-                for sentences_type, sentences in tqdm(
-                    sentences_to_evaluate.items(), desc="Sentences"
-                ):  # 2 sentence types
-                    evaluation_scores = evaluate_sentences_separated(
-                        evaluation_prompt=evaluation_prompt,
-                        sentences=sentences,
-                        temperature=temperature_value,
-                        model=model,
+                evaluation_scores = evaluate_sentences_separated(
+                    evaluation_prompt=evaluation_prompt,
+                    sentences=all_sentences,
+                    temperature=temperature_value,
+                    model=model,
+                )
+                separated_sentences_results = list(
+                    map(
+                        lambda score_sentence: assign_experiments_values(
+                            score=score_sentence[0],
+                            temperature=temperature_type,
+                            sentence=score_sentence[1]["sentence"],
+                            evaluation_prompt=evaluation_type,
+                            dataset=score_sentence[1]["dataset"],
+                            subject=subject,
+                            trial=trial_counter + score_sentence[2],
+                        ),
+                        zip(evaluation_scores, all_sentences, range(NUM_SENTENCES)),
                     )
-                    separated_sentences_results = list(
-                        map(
-                            lambda score_sentence: assign_experiments_values(
-                                score=score_sentence[0],
-                                temperature=temperature_type,
-                                sentence=score_sentence[1]["sentence"],
-                                evaluation_prompt=evaluation_type,
-                                dataset=score_sentence[1]["dataset"],
-                                block=sentences_type,
-                                subject=subject,
-                                trial=trial_counter + score_sentence[2],
-                            ),
-                            zip(evaluation_scores, sentences, range(NUM_SENTENCES)),
-                        )
-                    )
-                    trial_counter += NUM_SENTENCES
+                )
+                trial_counter += NUM_SENTENCES
 
-                    # create new df concatenating experiment results
-                    df = pd.concat(
-                        [df, pd.DataFrame(separated_sentences_results)],
-                        ignore_index=True,
-                    )
+                # create new df concatenating experiment results
+                df = pd.concat(
+                    [df, pd.DataFrame(separated_sentences_results)],
+                    ignore_index=True,
+                )
 
-                    evaluation_scores = evaluate_sentences_together(
-                        evaluation_prompt=evaluation_prompt,
-                        sentences=sentences,
-                        temperature=temperature_value,
-                        model=model,
-                    )
-                    evaluation_scores = [
-                        int(string)
-                        for string in list(evaluation_scores)
-                        if string.isdigit()
-                    ]
-                    assert len(evaluation_scores) == NUM_SENTENCES, "number of scores doesn't match the number of sentences"
-
-                    together_sentences_results = list(
-                        map(
-                            lambda score_sentence: assign_experiments_values(
-                                score=score_sentence[0],
-                                temperature=temperature_type,
-                                sentence=score_sentence[1]["sentence"],
-                                evaluation_prompt=evaluation_type,
-                                dataset=score_sentence[1]["dataset"],
-                                block=sentences_type,
-                                subject=subject,
-                                trial=trial_counter + score_sentence[2],
-                            ),
-                            list(zip(evaluation_scores, sentences, range(NUM_SENTENCES))),
-                        )
-                    )
-                    trial_counter += NUM_SENTENCES
-
-                    # create new df concatenating experiment results
-                    df = pd.concat(
-                        [df, pd.DataFrame(together_sentences_results)],
-                        ignore_index=True,
-                    )
-
-                    # save df preemtively (in case OpenAI fails us)
-                    df.to_csv(output_file, index=False)
+                # save df preemtively (in case OpenAI fails us)
+                df.to_csv(output_file, index=False)
 
 
 if __name__ == "__main__":
