@@ -85,7 +85,7 @@ def evaluate_sentences_separated(
 
     {{sentence.sentence}}
 
-    Answer giving only the score and in numberic format.
+    Answer giving only the score in numberic format. No text.
 
     Sentence:
     ----
