@@ -85,7 +85,7 @@ def evaluate_sentences_separated(
 
     {{sentence.sentence}}
 
-    Give a short answer with only the score as a number.
+    Answer giving only the score and in numberic format.
 
     Sentence:
     ----
@@ -142,11 +142,13 @@ def load_last_state():
         last_subject = last_state.get("subject", 0)
         last_temperature_type = last_state.get("temperature_type", None)
         last_evaluation_type = last_state.get("evaluation_type", None)
+        last_trial_counter = last_state.get('trial_counter', 0)
     except (FileNotFoundError, json.JSONDecodeError):
         last_subject = 0
         last_temperature_type = None
         last_evaluation_type = None
-    return last_subject, last_temperature_type, last_evaluation_type
+        last_trial_counter = 0
+    return last_subject, last_temperature_type, last_evaluation_type, last_trial_counter
 
 
 def rate_sentences(
@@ -176,18 +178,19 @@ def rate_sentences(
 
     df = pd.DataFrame()
 
-    last_subject, last_temperature_type, last_evaluation_type = load_last_state()
+    last_subject, last_temperature_type, last_evaluation_type, last_trial_counter = load_last_state()
 
     # current state variable handlers
     current_subject = last_subject
     current_temperature_type = last_temperature_type
     current_evaluation_type = last_evaluation_type
+    current_trial_counter = last_trial_counter
 
     skip_temperature = last_temperature_type is not None
     skip_evaluation = last_evaluation_type is not None
 
     for subject in tqdm(range(last_subject, NUM_SUBJECTS), desc="Subjects"):
-        trial_counter = 0
+        trial_counter = last_trial_counter if subject == last_subject else 0
         for temperature_type, temperature_value in tqdm(
             TEMPERATURES.items(), desc="Temperatures"
         ):  # 2 temperature types
@@ -215,6 +218,7 @@ def rate_sentences(
                                 "subject": current_subject,
                                 "temperature_type": current_temperature_type,
                                 "evaluation_type": current_evaluation_type,
+                                'trial_counter': current_trial_counter
                             },
                             f,
                         )
@@ -248,6 +252,7 @@ def rate_sentences(
                 current_subject = subject
                 current_temperature_type = temperature_type
                 current_evaluation_type = evaluation_type
+                current_trial_counter = trial_counter
 
     # delete the state file when run completes
     if "last_successful_state.json" in os.listdir():
