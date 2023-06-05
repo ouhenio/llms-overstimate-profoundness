@@ -3,7 +3,7 @@ import pandas as pd
 import openai
 import guidance
 import random
-import pprint
+import fire
 
 from dotenv import load_dotenv
 from prompts import EVALUATION_PROMPTS_DICT
@@ -12,9 +12,9 @@ from tqdm import tqdm
 
 load_dotenv()
 openai.api_key = os.getenv('OPENAI_KEY')
-OPENAI_MODEL = 'gpt-4'
 
-temperatures = {"0": 0.1, "1": 0.7}
+OPENAI_MODELS = {'gpt-4': 'gpt-4', 'gpt-3.5': 'gpt-3.5-turbo'}
+TEMPERATURES = {'0': 0.1, '1': 0.7}
 
 def load_sentences(path: str) -> list:
     df = pd.read_excel(path)
@@ -26,8 +26,13 @@ def assign_dataset_to_sentences(sentences: list, dataset: str) -> list:
     return [{"dataset": dataset, "sentence": sentence} for sentence in sentences]
 
 
-def evaluate_sentences_together(evaluation_prompt: str, sentences: list) -> list:
-    gpt = guidance.llms.OpenAI(OPENAI_MODEL, caching=False)
+def evaluate_sentences_together(
+    evaluation_prompt: str,
+    sentences: list,
+    temperature: int,
+    model: str = 'gpt-3.5',
+) -> list:
+    gpt = guidance.llms.OpenAI(OPENAI_MODELS[model], caching=False)
     evaluate_sentence = guidance('''
     {{#user~}}
     {{evaluation_prompt}}
@@ -41,16 +46,25 @@ def evaluate_sentences_together(evaluation_prompt: str, sentences: list) -> list
     {{~/user}}
 
     {{#assistant~}}
-    {{gen 'scores' max_tokens=1500}}
+    {{gen 'scores' max_tokens=1500 temperature=temperature}}
     {{~/assistant}}
     ''', llm=gpt)
 
-    scores = evaluate_sentence(evaluation_prompt=evaluation_prompt, sentences=sentences)['scores']
+    scores = evaluate_sentence(
+        evaluation_prompt=evaluation_prompt,
+        sentences=sentences,
+        temperature=temperature
+    )['scores']
 
     return scores
 
-def evaluate_sentences_separated(evaluation_prompt, sentences):
-    gpt = guidance.llms.OpenAI(OPENAI_MODEL, caching=False)
+def evaluate_sentences_separated(
+    evaluation_prompt: str,
+    sentences: list,
+    temperature: int,
+    model: str = 'gpt-3.5',
+) -> list:
+    gpt = guidance.llms.OpenAI(OPENAI_MODELS[model], caching=False)
     evaluate_sentence = guidance('''
     {{#user~}}
     {{evaluation_prompt}}
@@ -64,29 +78,30 @@ def evaluate_sentences_separated(evaluation_prompt, sentences):
     {{~/user}}
 
     {{#assistant~}}
-    {{gen 'score'}}
+    {{gen 'score' temperature=temperature}}
     {{~/assistant}}
     ''', llm=gpt)
 
     scores = list(map(
         lambda sentence: int(evaluate_sentence(
             evaluation_prompt=evaluation_prompt,
-            sentence=sentence
+            sentence=sentence,
+            temperature=temperature
         )["score"]), tqdm(sentences))
     )
 
     return scores
 
 def assign_experiments_values(
-        score,
-        trial,
-        temperature,
-        sentence,
-        evaluation_prompt,
-        dataset,
-        block,
-        subject,
-    ):
+    score,
+    trial,
+    temperature,
+    sentence,
+    evaluation_prompt,
+    dataset,
+    block,
+    subject,
+) -> dict:
     experiment = {
         "subject": subject,
         "trial": trial,
@@ -99,24 +114,27 @@ def assign_experiments_values(
     }
     return experiment
 
-if __name__ == '__main__':
+def rate_sentences(
+    model: str = 'gpt-3.5',
+    output_file: str = 'results.csv',
+) -> None:
     random.seed(49)
 
-    bs_sentences = assign_dataset_to_sentences(load_sentences("../data/BS.xlsx"), "0")
+    bs_sentences = assign_dataset_to_sentences(load_sentences("./data/BS.xlsx"), "0")
     bs_sentences_new = assign_dataset_to_sentences(
-        load_sentences("../data/New_BS.xlsx"), "1"
+        load_sentences("./data/New_BS.xlsx"), "1"
     )
     bs_sentences_generated = assign_dataset_to_sentences(
-        load_sentences("../data/BS_generated.xlsx"), "2"
+        load_sentences("./data/BS_generated.xlsx"), "2"
     )
     motivational_sentences = assign_dataset_to_sentences(
-        load_sentences("../data/Motivational.xlsx"), "3"
+        load_sentences("./data/Motivational.xlsx"), "3"
     )
     mundane_sentences = assign_dataset_to_sentences(
-        load_sentences("../data/Mundane.xlsx"), "4"
+        load_sentences("./data/Mundane.xlsx"), "4"
     )
 
-    bs_sentences_all = bs_sentences + bs_sentences_generated + bs_sentences_generated
+    bs_sentences_all = bs_sentences + bs_sentences_generated + bs_sentences_new
     all_sentences = bs_sentences_all + mundane_sentences + motivational_sentences # 0
     all_sentences_shuffled = all_sentences.copy() # 1
     random.shuffle(all_sentences_shuffled)
@@ -126,10 +144,10 @@ if __name__ == '__main__':
     df = pd.DataFrame()
 
     subject_counter = 0
-    for trial in tqdm(range(200), desc="Trials"):
+    for trial in tqdm(range(200), desc="Trials"): 
         for temperature_type, temperature_value in tqdm(
-            temperatures.items(), desc="Temperatures"
-        ):
+            TEMPERATURES.items(), desc="Temperatures"
+        ):  # 2 temperature types
             for evaluation_type, evaluation_prompt in tqdm(
                 EVALUATION_PROMPTS_DICT.items(), desc="Evaluations"
             ): # 10 evaluation types
@@ -137,7 +155,10 @@ if __name__ == '__main__':
                     sentences_to_evaluate.items(), desc="Sentences"
                 ): # 2 sentence types
                     evaluation_scores = evaluate_sentences_separated(
-                        evaluation_prompt=evaluation_prompt, sentences=sentences
+                        evaluation_prompt=evaluation_prompt,
+                        sentences=sentences,
+                        temperature=temperature_value,
+                        model=model,
                     )
                     separated_sentences_results = list(
                         map(
@@ -159,7 +180,10 @@ if __name__ == '__main__':
                     df = pd.concat([df, pd.DataFrame(separated_sentences_results)], ignore_index=True)
 
                     evaluation_scores = evaluate_sentences_together(
-                        evaluation_prompt=evaluation_prompt, sentences=sentences
+                        evaluation_prompt=evaluation_prompt,
+                        sentences=sentences,
+                        temperature=temperature_value,
+                        model=model,
                     )
                     evaluation_scores = [
                         int(string) for string in list(evaluation_scores) if string.isdigit()
@@ -184,5 +208,9 @@ if __name__ == '__main__':
                     df = pd.concat([df, pd.DataFrame(together_sentences_results)], ignore_index=True)
 
                     # save df preemtively (in case OpenAI fails us)
-                    df.to_csv('experiment_results.csv', index=False)
+                    df.to_csv(output_file, index=False)
             subject_counter += 1
+
+
+if __name__ == '__main__':
+    fire.Fire(rate_sentences)
