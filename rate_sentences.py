@@ -15,6 +15,7 @@ openai.api_key = os.getenv("OPENAI_KEY")
 
 OPENAI_MODELS = {"gpt-4": "gpt-4", "gpt-3.5": "gpt-3.5-turbo"}
 TEMPERATURES = {"0": 0.1, "1": 0.7}
+NUM_SUBJECTS = 198
 
 
 def load_sentences(path: str) -> list:
@@ -157,12 +158,13 @@ def rate_sentences(
     all_sentences_shuffled = all_sentences.copy()  # 1
     random.shuffle(all_sentences_shuffled)
 
+    NUM_SENTENCES = len(all_sentences)
     sentences_to_evaluate = {"0": all_sentences, "1": all_sentences_shuffled}
 
     df = pd.DataFrame()
 
-    subject_counter = 0
-    for trial in tqdm(range(200), desc="Trials"):
+    for subject in tqdm(range(NUM_SUBJECTS), desc="Subjects"):
+        trial_counter = 0
         for temperature_type, temperature_value in tqdm(
             TEMPERATURES.items(), desc="Temperatures"
         ):  # 2 temperature types
@@ -182,17 +184,18 @@ def rate_sentences(
                         map(
                             lambda score_sentence: assign_experiments_values(
                                 score=score_sentence[0],
-                                trial=trial,
                                 temperature=temperature_type,
                                 sentence=score_sentence[1]["sentence"],
                                 evaluation_prompt=evaluation_type,
                                 dataset=score_sentence[1]["dataset"],
                                 block=sentences_type,
-                                subject=subject_counter,
+                                subject=subject,
+                                trial=trial_counter + score_sentence[2],
                             ),
-                            zip(evaluation_scores, sentences),
+                            zip(evaluation_scores, sentences, range(NUM_SENTENCES)),
                         )
                     )
+                    trial_counter += NUM_SENTENCES
 
                     # create new df concatenating experiment results
                     df = pd.concat(
@@ -211,21 +214,24 @@ def rate_sentences(
                         for string in list(evaluation_scores)
                         if string.isdigit()
                     ]
+                    assert len(evaluation_scores) == NUM_SENTENCES, "number of scores doesn't match the number of sentences"
+
                     together_sentences_results = list(
                         map(
                             lambda score_sentence: assign_experiments_values(
                                 score=score_sentence[0],
-                                trial=trial,
                                 temperature=temperature_type,
                                 sentence=score_sentence[1]["sentence"],
                                 evaluation_prompt=evaluation_type,
                                 dataset=score_sentence[1]["dataset"],
                                 block=sentences_type,
-                                subject=subject_counter,
+                                subject=subject,
+                                trial=trial_counter + score_sentence[2],
                             ),
-                            list(zip(evaluation_scores, sentences)),
+                            list(zip(evaluation_scores, sentences, range(NUM_SENTENCES))),
                         )
                     )
+                    trial_counter += NUM_SENTENCES
 
                     # create new df concatenating experiment results
                     df = pd.concat(
@@ -235,7 +241,6 @@ def rate_sentences(
 
                     # save df preemtively (in case OpenAI fails us)
                     df.to_csv(output_file, index=False)
-            subject_counter += 1
 
 
 if __name__ == "__main__":
