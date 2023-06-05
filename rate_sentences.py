@@ -1,3 +1,4 @@
+import json
 import os
 import random
 
@@ -134,6 +135,20 @@ def assign_experiments_values(
     return experiment
 
 
+def load_last_state():
+    try:
+        with open("last_successful_state.json", "r") as f:
+            last_state = json.load(f)
+        last_subject = last_state.get("subject", 0)
+        last_temperature_type = last_state.get("temperature_type", None)
+        last_evaluation_type = last_state.get("evaluation_type", None)
+    except (FileNotFoundError, json.JSONDecodeError):
+        last_subject = 0
+        last_temperature_type = None
+        last_evaluation_type = None
+    return last_subject, last_temperature_type, last_evaluation_type
+
+
 def rate_sentences(
     model: str = "gpt-3.5",
     output_file: str = "results.csv",
@@ -161,20 +176,50 @@ def rate_sentences(
 
     df = pd.DataFrame()
 
-    for subject in tqdm(range(NUM_SUBJECTS), desc="Subjects"):
+    last_subject, last_temperature_type, last_evaluation_type = load_last_state()
+
+    # current state variable handlers
+    current_subject = last_subject
+    current_temperature_type = last_temperature_type
+    current_evaluation_type = last_evaluation_type
+
+    skip_temperature = last_temperature_type is not None
+    skip_evaluation = last_evaluation_type is not None
+
+    for subject in tqdm(range(last_subject, NUM_SUBJECTS), desc="Subjects"):
         trial_counter = 0
         for temperature_type, temperature_value in tqdm(
             TEMPERATURES.items(), desc="Temperatures"
         ):  # 2 temperature types
+            if skip_temperature and temperature_type != last_temperature_type:
+                continue
+            skip_temperature = False
             for evaluation_type, evaluation_prompt in tqdm(
                 EVALUATION_PROMPTS_DICT.items(), desc="Evaluations"
             ):  # 10 evaluation types
-                evaluation_scores = evaluate_sentences_separated(
-                    evaluation_prompt=evaluation_prompt,
-                    sentences=all_sentences,
-                    temperature=temperature_value,
-                    model=model,
-                )
+                if skip_evaluation and evaluation_type != last_evaluation_type:
+                    continue
+                skip_evaluation = False
+                try:
+                    evaluation_scores = evaluate_sentences_separated(
+                        evaluation_prompt=evaluation_prompt,
+                        sentences=all_sentences,
+                        temperature=temperature_value,
+                        model=model,
+                    )
+                except Exception as e:
+                    # Save the current state before terminating
+                    with open("last_successful_state.json", "w") as f:
+                        json.dump(
+                            {
+                                "subject": current_subject,
+                                "temperature_type": current_temperature_type,
+                                "evaluation_type": current_evaluation_type,
+                            },
+                            f,
+                        )
+                    raise e
+
                 separated_sentences_results = list(
                     map(
                         lambda score_sentence: assign_experiments_values(
@@ -193,12 +238,20 @@ def rate_sentences(
 
                 # create new df concatenating experiment results
                 df = pd.concat(
-                    [df, pd.DataFrame(separated_sentences_results)],
-                    ignore_index=True,
+                    [df, pd.DataFrame(separated_sentences_results)], ignore_index=True
                 )
 
-                # save df preemtively (in case OpenAI fails us)
+                # save df preemptively (in case OpenAI fails us)
                 df.to_csv(output_file, index=False)
+
+                # Update the current state
+                current_subject = subject
+                current_temperature_type = temperature_type
+                current_evaluation_type = evaluation_type
+
+    # delete the state file when run completes
+    if "last_successful_state.json" in os.listdir():
+        os.remove("last_successful_state.json")
 
 
 if __name__ == "__main__":

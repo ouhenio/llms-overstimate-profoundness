@@ -7,4 +7,3 @@ openai
 guidance
 xlsxwriter
 python-dotenv
-
