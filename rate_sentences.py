@@ -134,11 +134,11 @@ def rate_sentences(
     )
 
     all_sentences = (
-        bs_sentences + 
-        bs_sentences_generated +
-        bs_sentences_new +
-        mundane_sentences +
-        motivational_sentences
+        bs_sentences
+        + bs_sentences_generated
+        + bs_sentences_new
+        + mundane_sentences
+        + motivational_sentences
     )
 
     NUM_SENTENCES = len(all_sentences)
