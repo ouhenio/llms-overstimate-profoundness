@@ -11,7 +11,9 @@ Second, compare the statements that were given with a mundane sentence, such as:
 
 Third, if you believe the statements have the same level of profoundness as the mundane sentence, you should answer with a low value on the 5-point scale. In contrast, if you believe the statements have the same level of profoundness as the motivational sentence, you should answer with a high value on the 5-point scale.
 
-Rate the profoundness of the following sentences on the following 5-point scale: 1= Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
+Rate the profoundness of the following sentences on the following 5-point scale:
+
+1 = Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
 """  # noqa: E501
 
 cot_motivational = """
@@ -23,7 +25,9 @@ To give your answer, first compare the statements that were given with a motivat
 
 Second, if you believe the statements have the same level of profoundness as this mundane sentence, you should answer with a high value on the 5-point scale.
 
-Rate the profoundness of the following sentences on the following 5-point scale: 1= Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
+Rate the profoundness of the following sentences on the following 5-point scale:
+
+1 = Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
 """  # noqa: E501
 
 cot_mundane = """
@@ -35,7 +39,9 @@ To give your answer, first compare the statements that were given with a normal 
 
 Second, if you believe the statements have the same level of profoundness as this mundane sentence, you should answer with a low value on the 5-point scale.
 
-Rate the profoundness of the following sentences on the following 5-point scale: 1= Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
+Rate the profoundness of the following sentences on the following 5-point scale:
+
+1 = Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
 """  # noqa: E501
 
 cot_n_3_mo_vs_mu = """
@@ -55,7 +61,9 @@ Second, compare the statements that were given with a mundane sentences, such as
 
 Third, if you believe the statements have the same level of profoundness as the mundane sentence, you should answer with a low value on the 5-point scale. In contrast, if you believe the statements have the same level of profoundness as the motivational sentence, you should answer with a high value on the 5-point scale.
 
-Rate the profoundness of the following sentences on the following 5-point scale: 1= Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
+Rate the profoundness of the following sentences on the following 5-point scale:
+
+1 = Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
 """  # noqa: E501
 
 cot_n_3_mundane = """
@@ -69,7 +77,9 @@ To give your answer, first compare the statements that were given with a normal 
 
 Second, if you believe the statements have the same level of profoundness as this mundane sentence, you should answer with a low value on the 5-point scale.
 
-Rate the profoundness of the following sentences on the following 5-point scale: 1= Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
+Rate the profoundness of the following sentences on the following 5-point scale:
+
+1 = Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
 """  # noqa: E501
 
 cot_n_3_motivational = """
@@ -84,7 +94,9 @@ To give your answer, first compare the statements that were given with a motivat
 
 Second, if you believe the statements have the same level of profoundness as this motivational sentence, you should answer with a high value on the 5-point scale.
 
-Rate the profoundness of the following sentences on the following 5-point scale: 1= Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
+Rate the profoundness of the following sentences on the following 5-point scale:
+
+1 = Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
 """  # noqa: E501
 
 n_1_learning = """
@@ -96,7 +108,9 @@ For instance, the sentence:
 
 is not profound and is considered as pseudo-profound bullshit, because the association of these words in the same sentence do not provide any meaning.
 
-Rate the profoundness of the following sentences on the following 5-point scale: 1= Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
+Rate the profoundness of the following sentences on the following 5-point scale:
+
+1 = Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
 """  # noqa: E501
 
 n_3_learning = """
@@ -110,13 +124,17 @@ For instance, the 3 following sentences:
 
 are not profound and are considered as pseudo-profound bullshit, because the association of these words in the same sentence do not provide any meaning.
 
-Rate the profoundness of the following sentences on the following 5-point scale: 1= Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
+Rate the profoundness of the following sentences on the following 5-point scale:
+
+1 = Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
 """  # noqa: E501
 
 cot_zero = """
 We are interested in how people experience the profound. Below are a series of statements taken from relevant websites. Please read each statement and take a moment to think about what it might mean. Then please rate how “profound” you think it is. Profound means “of deep meaning; of great and broadly inclusive significance.”
 
-Rate the profoundness of the following sentences on the following 5-point scale: 1= Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
+Rate the profoundness of the following sentences on the following 5-point scale:
+
+1 = Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
 
 To give your answer, think step by step.
 """  # noqa: E501
@@ -124,7 +142,9 @@ To give your answer, think step by step.
 human = """
 We are interested in how people experience the profound. Below are a series of statements taken from relevant websites. Please read each statement and take a moment to think about what it might mean. Then please rate how “profound” you think it is. Profound means “of deep meaning; of great and broadly inclusive significance.”
 
-Rate the profoundness of the following sentences on the following 5-point scale: 1= Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
+Rate the profoundness of the following sentences on the following 5-point scale:
+
+1 = Not at all profound, 2 = somewhat profound, 3 = fairly profound, 4 = definitely profound, 5 = very profound
 """  # noqa: E501
 
 EVALUATION_PROMPTS_DICT = {

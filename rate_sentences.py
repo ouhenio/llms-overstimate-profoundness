@@ -35,42 +35,6 @@ def assign_dataset_to_sentences(sentences: list, dataset: str) -> list:
     return [{"dataset": dataset, "sentence": sentence} for sentence in sentences]
 
 
-def evaluate_sentences_together(
-    evaluation_prompt: str,
-    sentences: list,
-    temperature: int,
-    model: str = "gpt-3.5",
-) -> list:
-    gpt = guidance.llms.OpenAI(OPENAI_MODELS[model], caching=False)
-    evaluate_sentence = guidance(
-        """
-    {{#user~}}
-    {{evaluation_prompt}}
-
-    Give short answers with only the scores as numbers.
-
-    List of sentences:
-    ----
-    {{#each sentences}}- {{this.sentence}}
-    {{/each~}}
-    {{~/user}}
-
-    {{#assistant~}}
-    {{gen 'scores' max_tokens=1500 temperature=temperature}}
-    {{~/assistant}}
-    """,
-        llm=gpt,
-    )
-
-    scores = evaluate_sentence(
-        evaluation_prompt=evaluation_prompt,
-        sentences=sentences,
-        temperature=temperature,
-    )["scores"]
-
-    return scores
-
-
 def evaluate_sentences_separated(
     evaluation_prompt: str,
     sentences: list,
@@ -83,12 +47,13 @@ def evaluate_sentences_separated(
     {{#user~}}
     {{evaluation_prompt}}
 
-    {{sentence.sentence}}
-
-    Answer giving only the score in numberic format. No text.
-
+    Provide your rating as a simple numerical value, without any accompanying text.
+    
     Sentence:
     ----
+    {{sentence.sentence}}
+
+
     {{~/user}}
 
     {{#assistant~}}
