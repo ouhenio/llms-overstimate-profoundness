@@ -137,6 +137,11 @@ def rate_sentences(
     all_sentences = bs_sentences_all + mundane_sentences + motivational_sentences
 
     NUM_SENTENCES = len(all_sentences)
+    NUM_TEMPERATURES = len(TEMPERATURES)
+    NUM_EVALUATION_PROMPTS = len(EVALUATION_PROMPTS_DICT)
+    TOTAL_TRIALS = (
+        NUM_SUBJECTS * NUM_SENTENCES * NUM_TEMPERATURES * NUM_EVALUATION_PROMPTS
+    )
 
     (
         last_subject,
@@ -161,7 +166,6 @@ def rate_sentences(
         else pd.DataFrame()
     )
 
-    TOTAL_TRIALS = NUM_SUBJECTS * 2 * 10 * NUM_SENTENCES
     progress_bar = tqdm(range(TOTAL_TRIALS))
     if current_trial_counter > 0:
         progress_bar.update(current_trial_counter + 1)
