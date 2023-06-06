@@ -133,8 +133,13 @@ def rate_sentences(
         load_sentences("./data/Mundane.xlsx"), "4"
     )
 
-    bs_sentences_all = bs_sentences + bs_sentences_generated + bs_sentences_new
-    all_sentences = bs_sentences_all + mundane_sentences + motivational_sentences
+    all_sentences = (
+        bs_sentences + 
+        bs_sentences_generated +
+        bs_sentences_new +
+        mundane_sentences +
+        motivational_sentences
+    )
 
     NUM_SENTENCES = len(all_sentences)
     NUM_TEMPERATURES = len(TEMPERATURES)
@@ -143,6 +148,7 @@ def rate_sentences(
         NUM_SUBJECTS * NUM_SENTENCES * NUM_TEMPERATURES * NUM_EVALUATION_PROMPTS
     )
 
+    # get last iteration states
     (
         last_subject,
         last_temperature_type,
@@ -166,23 +172,23 @@ def rate_sentences(
         else pd.DataFrame()
     )
 
+    # create progress bar and update it
     progress_bar = tqdm(range(TOTAL_TRIALS))
-    if current_trial_counter > 0:
-        progress_bar.update(current_trial_counter + 1)
+    progress_bar.update(len(df))
 
     for subject in range(last_subject, NUM_SUBJECTS):
         trial_counter = last_trial_counter if subject == last_subject else 0
         for (
             temperature_type,
             temperature_value,
-        ) in TEMPERATURES.items():  # 2 temperature types
+        ) in TEMPERATURES.items():
             if skip_temperature and temperature_type != last_temperature_type:
                 continue
             skip_temperature = False
             for (
                 evaluation_type,
                 evaluation_prompt,
-            ) in EVALUATION_PROMPTS_DICT.items():  # 10 evaluation types
+            ) in EVALUATION_PROMPTS_DICT.items():
                 if skip_evaluation and evaluation_type != last_evaluation_type:
                     continue
                 skip_evaluation = False
