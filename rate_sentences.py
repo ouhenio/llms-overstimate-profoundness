@@ -167,7 +167,7 @@ def rate_sentences(
     skip_evaluation = last_evaluation_type is not None
 
     df = (
-        pd.read_csv(output_file)
+        pd.read_csv(output_file, header=None)
         if last_temperature_type is not None
         else pd.DataFrame()
     )
