@@ -167,8 +167,8 @@ def rate_sentences(
     skip_evaluation = last_evaluation_type is not None
 
     df = (
-        pd.read_csv(output_file, header=None)
-        if last_temperature_type is not None
+        pd.read_csv(output_file)
+        if os.path.isfile(output_file)
         else pd.DataFrame()
     )
 
@@ -176,6 +176,7 @@ def rate_sentences(
     progress_bar = tqdm(range(TOTAL_TRIALS))
     progress_bar.update(len(df))
 
+    succesful_trials = []
     for subject in range(last_subject, NUM_SUBJECTS):
         trial_counter = last_trial_counter if subject == last_subject else 0
         for (
@@ -193,7 +194,6 @@ def rate_sentences(
                     continue
                 skip_evaluation = False
 
-                succesful_trials = []
                 for i in range(current_i, NUM_SENTENCES):
                     sentence = all_sentences[i]["sentence"]
                     dataset = all_sentences[i]["dataset"]
@@ -219,11 +219,12 @@ def rate_sentences(
                             )
 
                         # save advances before terminating
-                        print("Encountered and error, saving progress...")
-                        df = pd.concat(
-                            [df, pd.DataFrame(succesful_trials)], ignore_index=True
-                        )
-                        df.to_csv(output_file, index=False)
+                        if len(succesful_trials) > 0:
+                            print("Encountered and error, saving progress...")
+                            df = pd.concat(
+                                [df, pd.DataFrame(succesful_trials)], ignore_index=True
+                            )
+                            df.to_csv(output_file, index=False)
                         raise e
 
                     # store progress
@@ -246,9 +247,9 @@ def rate_sentences(
                     current_trial_counter = trial_counter
                     progress_bar.update(1)
 
-                # save advances after succesful iteration
-                df = pd.concat([df, pd.DataFrame(succesful_trials)], ignore_index=True)
-                df.to_csv(output_file, index=False)
+    # save advances after end
+    df = pd.concat([df, pd.DataFrame(succesful_trials)], ignore_index=True)
+    df.to_csv(output_file, index=False)
 
     # delete the state file when run completes
     if "last_successful_state.json" in os.listdir():
