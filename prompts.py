@@ -148,14 +148,14 @@ Rate the profoundness of the following sentences on the following 5-point scale:
 """  # noqa: E501
 
 EVALUATION_PROMPTS_DICT = {
-    "1": human,
-    "2": n_1_learning,
-    "3": n_3_learning,
-    "4": cot_zero,
-    "5": cot_mundane,
-    "6": cot_motivational,
-    "7": cot_mo_vs_mu,
-    "8": cot_n_3_mundane,
-    "9": cot_n_3_motivational,
-    "10": cot_n_3_mo_vs_mu,
+    1: human,
+    2: n_1_learning,
+    3: n_3_learning,
+    4: cot_zero,
+    5: cot_mundane,
+    6: cot_motivational,
+    7: cot_mo_vs_mu,
+    8: cot_n_3_mundane,
+    9: cot_n_3_motivational,
+    10: cot_n_3_mo_vs_mu,
 }

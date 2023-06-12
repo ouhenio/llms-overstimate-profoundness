@@ -224,7 +224,7 @@ def rate_sentences(
                             df = pd.concat(
                                 [df, pd.DataFrame(succesful_trials)], ignore_index=True
                             )
-                            df.to_csv(output_file, index=False)
+                            df.to_csv(output_file)
                         raise e
 
                     # store progress
@@ -249,7 +249,7 @@ def rate_sentences(
 
     # save advances after end
     df = pd.concat([df, pd.DataFrame(succesful_trials)], ignore_index=True)
-    df.to_csv(output_file, index=False)
+    df.to_csv(output_file)
 
     # delete the state file when run completes
     if "last_successful_state.json" in os.listdir():
