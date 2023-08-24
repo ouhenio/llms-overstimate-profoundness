@@ -7,3 +7,5 @@ openai
 guidance
 xlsxwriter
 python-dotenv
+transformers
+torch
