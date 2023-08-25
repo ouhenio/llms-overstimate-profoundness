@@ -15,7 +15,7 @@ import torch
 
 load_dotenv()
 
-MODELS = { "small": "google/flan-t5-small", "xl": "google/flan-t5-xl" }
+MODELS = { "small": "google/flan-t5-small", "xl": "google/flan-t5-xl", "base": "google/flan-t5-base" }
 TEMPERATURES = {"0": 0.1, "1": 0.7}
 NUM_SUBJECTS = 20
 
@@ -108,7 +108,7 @@ def load_last_state():
 def rate_sentences(
     tokenizer,
     model,
-    output_file: str = "flan-t5-xl-results.csv",
+    output_file: str = "flan-t5-base-results.csv",
 ) -> None:
     random.seed(49)
 
@@ -251,7 +251,7 @@ def rate_sentences(
 
 def run_with_retries(
     model: str = "small",
-    output_file: str = "flan-t5-xl-results.csv",
+    output_file: str = "flan-t5-base-results.csv",
     delay_seconds: int = 5,
     max_retries: int = 5,
 ) -> None:
